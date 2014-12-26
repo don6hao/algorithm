@@ -102,13 +102,13 @@ static void right_rotation(tree_pointer *parent)
     tree_pointer grand_child = NULL;
 
     if (-1 == child->bf){
-        printf("2222222222222222\n");
+        printf("RR Rotation : \n");
         (*parent)->right_child = child->left_child;
         child->left_child = (*parent);
         (*parent)->bf = 0x00;
         (*parent) = child;
-    }else if (1 == child->bf){
-        printf("111111111111111111\n");
+    }else{
+        printf("RL Rotation : \n");
         grand_child = child->left_child;
         (*parent)->right_child = grand_child->left_child;
         child->left_child = grand_child->right_child;
@@ -128,9 +128,9 @@ static void right_rotation(tree_pointer *parent)
                 child->bf = 0x00;
                 break;
         }
-        grand_child->bf = 0x00;
         (*parent) = grand_child;
     }
+    (*parent)->bf = 0x00;
 
     return;
 }
@@ -142,12 +142,14 @@ static void left_rotation(tree_pointer *parent)
 
     if (0x01 == child->bf){
         /* LL rotation */
+        printf("LL Rotation : \n");
         (*parent)->left_child = child->right_child;
         child->right_child = (*parent);
-        (*parent) = child;
         (*parent)->bf = 0;
-    }else if (-1 == child->bf){
+        (*parent) = child;
+    }else{
         /* LR rotation */
+        printf("LR Rotation : \n");
         grand_child = child->right_child;
         (*parent)->left_child = grand_child->right_child;
         child->right_child =  grand_child->left_child;
@@ -168,9 +170,9 @@ static void left_rotation(tree_pointer *parent)
                 break;
 
         }
-        grand_child->bf = 0x00;
         (*parent) = grand_child;
     }
+    (*parent)->bf = 0;
     return;
 }
 
@@ -181,10 +183,22 @@ void do_rotation(tree_pointer *tp)
             ((*tp)->flag == RIGHT_WEIGHT)?((*tp)->bf = -1):((*tp)->bf = 1);
             break;
         case 0x01:
-            ((*tp)->flag == RIGHT_WEIGHT)?((*tp)->bf = 0x00):(left_rotation(tp));
+            if ((*tp)->flag == RIGHT_WEIGHT){
+                (*tp)->bf = 0x00;
+            }else{
+                if (0x00 != (*tp)->left_child->bf){
+                    left_rotation(tp);
+                }
+            }
             break;
         case -1:
-            ((*tp)->flag == RIGHT_WEIGHT)?(right_rotation(tp)):((*tp)->bf = 0x00);
+            if ((*tp)->flag == RIGHT_WEIGHT){
+                if (0x00 != (*tp)->right_child->bf){
+                    right_rotation(tp);
+                }
+            }else{
+                (*tp)->bf = 0x00;
+            }
             break;
         default:
             printf("balance factor was abnormal!\n");
@@ -209,10 +223,12 @@ int avl_insert(tree_pointer *parent, element x)
     leaf_node->left_child = NULL;
     leaf_node->flag = -1;
 
+    printf("insert x.key : %d\n", x.key);
     tree_pointer *tmp_pointer = parent;
     while(NULL != *tmp_pointer){
         /* insert tree_pointer into tnlist */
         list_insert(&head, tmp_pointer);
+        printf("insert tmp_pointer's key : %d, bf : %d\n\n", (*tmp_pointer)->data.key, (*tmp_pointer)->bf);
         if (x.key < (*tmp_pointer)->data.key){
             (*tmp_pointer)->flag = LEFT_WEIGHT;
             tmp_pointer = &((*tmp_pointer)->left_child);
@@ -227,6 +243,7 @@ int avl_insert(tree_pointer *parent, element x)
         list_pointer list_node = list_remove(&head);
         do_rotation((tree_pointer *)(list_node->data));
     }
+    printf("++++++++++++++++++++++++++++++++++++++++\n");
 
     return TRUE;
 }
